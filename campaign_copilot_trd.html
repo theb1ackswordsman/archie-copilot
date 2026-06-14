@@ -1,0 +1,101 @@
+
+<style>
+  .trd { padding: 1.5rem 0; font-size: 15px; line-height: 1.7; color: var(--color-text-primary); }
+  .trd h1 { font-size: 22px; font-weight: 500; margin: 0 0 0.25rem; }
+  .trd .tagline { color: var(--color-text-secondary); font-size: 14px; margin-bottom: 2rem; }
+  .trd h2 { font-size: 16px; font-weight: 500; margin: 2rem 0 0.5rem; border-bottom: 1px solid var(--color-border-tertiary); padding-bottom: 0.4rem; }
+  .trd h3 { font-size: 13px; font-weight: 500; margin: 1.2rem 0 0.3rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+  .trd p { margin: 0.4rem 0; }
+  .stack-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0.75rem 0; }
+  .stack-card { background: var(--color-background-secondary); border-radius: 8px; padding: 0.9rem 1.1rem; }
+  .stack-card .label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-secondary); margin-bottom: 0.4rem; }
+  .stack-card .val { font-size: 14px; font-weight: 500; }
+  .stack-card .why { font-size: 12px; color: var(--color-text-secondary); margin-top: 0.2rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 0.75rem 0; }
+  th { text-align: left; font-weight: 500; padding: 6px 10px; background: var(--color-background-secondary); color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--color-border-tertiary); vertical-align: top; }
+  code { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-secondary); padding: 1px 5px; border-radius: 4px; }
+  pre { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-secondary); padding: 1rem; border-radius: 8px; overflow-x: auto; line-height: 1.6; margin: 0.75rem 0; }
+  .flow-seq { background: var(--color-background-secondary); border-radius: 8px; padding: 1rem 1.25rem; margin: 0.75rem 0; }
+  .flow-seq .step { display: flex; gap: 0.75rem; align-items: flex-start; margin: 0.5rem 0; font-size: 13px; }
+  .flow-seq .arrow { color: var(--color-text-secondary); min-width: 20px; font-size: 16px; margin-top: 1px; }
+  .flow-seq .txt { color: var(--color-text-primary); }
+  .flow-seq .sub { color: var(--color-text-secondary); font-size: 12px; }
+  .badge { font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
+  .badge.get { background: var(--color-background-info); color: var(--color-text-info); }
+  .badge.post { background: var(--color-background-success); color: var(--color-text-success); }
+  .badge.sse { background: var(--color-background-warning); color: var(--color-text-warning); }
+  .tradeoff { border-left: 3px solid var(--color-border-secondary); padding: 0.5rem 1rem; margin: 0.5rem 0; font-size: 13px; color: var(--color-text-secondary); }
+</style>
+<div class="trd">
+  <h1>Campaign Copilot — TRD</h1>
+  <div class="tagline">Technical Reference Document · Architecture, APIs, Data Flow</div>
+
+  <h2>Stack</h2>
+  <div class="stack-row">
+    <div class="stack-card"><div class="label">Frontend</div><div class="val">React + Vite</div><div class="why">Fast, you know it, zero config</div></div>
+    <div class="stack-card"><div class="label">Backend (CRM)</div><div class="val">Node.js + Express</div><div class="why">Thin, async-native, easy SSE</div></div>
+    <div class="stack-card"><div class="label">Channel Service</div><div class="val">Node.js + Express (separate)</div><div class="why">Deployed separately — simulates real architecture</div></div>
+    <div class="stack-card"><div class="label">Database</div><div class="val">Supabase (PostgreSQL)</div><div class="why">Free tier, REST + realtime, no infra</div></div>
+    <div class="stack-card"><div class="label">AI</div><div class="val">Gemini 2.5 Flash</div><div class="why">Free tier, fast, strong enough for structured chat</div></div>
+    <div class="stack-card"><div class="label">Styling</div><div class="val">Tailwind + shadcn/ui</div><div class="why">Fast to build, consistent</div></div>
+    <div class="stack-card"><div class="label">Deployment</div><div class="val">Vercel (FE) + Railway (CRM + Channel)</div><div class="why">Railway handles two services cleanly</div></div>
+    <div class="stack-card"><div class="label">Real-time</div><div class="val">Server-Sent Events (SSE)</div><div class="why">20 lines, no WS setup, fits Railway</div></div>
+  </div>
+
+  <h2>Services overview</h2>
+  <table>
+    <tr><th>Service</th><th>Responsibility</th><th>Port</th></tr>
+    <tr><td><code>crm-api</code></td><td>Chat AI, segmentation, campaign management, receipt ingestion, SSE feed</td><td>3001</td></tr>
+    <tr><td><code>channel-service</code></td><td>Receive send requests, simulate delivery lifecycle, POST callbacks to CRM</td><td>3002</td></tr>
+    <tr><td><code>frontend</code></td><td>Chat UI + live dashboard</td><td>5173 (dev) / Vercel</td></tr>
+  </table>
+
+  <h2>Callback loop (the system design showcase)</h2>
+  <div class="flow-seq">
+    <div class="step"><div class="arrow">1</div><div class="txt"><strong>CRM sends campaign</strong><div class="sub">POST /send to channel service with recipient list, message, channel</div></div></div>
+    <div class="step"><div class="arrow">2</div><div class="txt"><strong>Channel service queues per-recipient</strong><div class="sub">Each message gets a unique <code>message_id</code>. Returns 202 immediately (non-blocking).</div></div></div>
+    <div class="step"><div class="arrow">3</div><div class="txt"><strong>Async delivery simulation</strong><div class="sub">setTimeout jitter (0.5–3s). ~90% delivered, ~8% failed, ~2% unknown. Opened/read events fire after delivery with additional jitter.</div></div></div>
+    <div class="step"><div class="arrow">4</div><div class="txt"><strong>Callback POST to CRM</strong><div class="sub">POST /api/receipts on CRM with <code>{message_id, campaign_id, status, timestamp}</code>. Retries 3× on 5xx with exponential backoff.</div></div></div>
+    <div class="step"><div class="arrow">5</div><div class="txt"><strong>CRM updates DB + emits SSE</strong><div class="sub">Upserts message status, recalculates campaign stats, broadcasts to all connected SSE clients.</div></div></div>
+    <div class="step"><div class="arrow">6</div><div class="txt"><strong>Dashboard updates live</strong><div class="sub">Sent / Delivered / Failed / Opened counters tick up in real time. No polling.</div></div></div>
+  </div>
+
+  <h2>API contracts</h2>
+  <h3>CRM API</h3>
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><span class="badge post">POST</span></td><td><code>/api/chat</code></td><td>Send a message to the AI copilot. Returns streamed or full response.</td></tr>
+    <tr><td><span class="badge post">POST</span></td><td><code>/api/campaigns</code></td><td>Create and fire a campaign (calls channel service internally)</td></tr>
+    <tr><td><span class="badge get">GET</span></td><td><code>/api/campaigns</code></td><td>List past campaigns with stats</td></tr>
+    <tr><td><span class="badge get">GET</span></td><td><code>/api/campaigns/:id</code></td><td>Campaign detail + per-message status</td></tr>
+    <tr><td><span class="badge post">POST</span></td><td><code>/api/receipts</code></td><td>Receive delivery callbacks from channel service</td></tr>
+    <tr><td><span class="badge sse">SSE</span></td><td><code>/api/stream/:campaign_id</code></td><td>Real-time delivery events for a campaign</td></tr>
+    <tr><td><span class="badge get">GET</span></td><td><code>/api/customers</code></td><td>List customers (used by AI for segment queries)</td></tr>
+    <tr><td><span class="badge get">GET</span></td><td><code>/api/segments/preview</code></td><td>Dry-run a segment query, returns count + sample</td></tr>
+  </table>
+
+  <h3>Channel Service API</h3>
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td><span class="badge post">POST</span></td><td><code>/send</code></td><td>Receive a batch send request from CRM. Returns 202.</td></tr>
+    <tr><td><span class="badge get">GET</span></td><td><code>/health</code></td><td>Health check</td></tr>
+  </table>
+
+  <h2>AI conversation state machine</h2>
+  <table>
+    <tr><th>Phase</th><th>AI does</th><th>Transition</th></tr>
+    <tr><td><code>INTENT</code></td><td>Parses user's campaign goal, extracts segment filters, asks 1 clarifying question</td><td>User confirms or refines segment</td></tr>
+    <tr><td><code>SEGMENT</code></td><td>Shows customer count + sample names, offers to exclude edge cases</td><td>User says "looks good" or adjusts</td></tr>
+    <tr><td><code>MESSAGE</code></td><td>Drafts WhatsApp/SMS copy, asks casual vs urgent vs promotional</td><td>User approves or requests tone change</td></tr>
+    <tr><td><code>CONFIRM</code></td><td>Summarises: N customers, channel, message preview, optional timing suggestion</td><td>User says "send it"</td></tr>
+    <tr><td><code>LIVE</code></td><td>Campaign dispatched. Dashboard shown. AI narrates incoming stats.</td><td>Terminal</td></tr>
+  </table>
+
+  <h2>Key tradeoffs (state what you chose and why)</h2>
+  <div class="tradeoff"><strong>SSE over WebSockets</strong> — SSE is unidirectional (server → client), which is all we need for delivery events. No WS handshake, no reconnect complexity. At this scale, perfect.</div>
+  <div class="tradeoff"><strong>No job queue (BullMQ/Redis)</strong> — Simulated callbacks use in-process setTimeout. At real scale you'd use a queue. Explicitly acknowledged: "I'd use BullMQ + Redis at scale, but setTimeout works for this demo and keeps the infra simple."</div>
+  <div class="tradeoff"><strong>Supabase over local PostgreSQL</strong> — No infra to manage, free tier sufficient, instant backups. Tradeoff: vendor dependency.</div>
+  <div class="tradeoff"><strong>Full conversation history per API call</strong> — Gemini has no memory between calls. We pass the entire chat history each turn. Tradeoff: token usage grows per conversation. Acceptable for demo length.</div>
+  <div class="tradeoff"><strong>No auth</strong> — Single-tenant demo. Explicitly cut. "Multi-tenant auth would require JWT + row-level security in Supabase — out of scope for this assignment."</div>
+</div>

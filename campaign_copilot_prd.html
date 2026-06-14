@@ -1,0 +1,96 @@
+
+<style>
+  .prd { padding: 1.5rem 0; font-size: 15px; line-height: 1.7; color: var(--color-text-primary); }
+  .prd h1 { font-size: 22px; font-weight: 500; margin: 0 0 0.25rem; }
+  .prd .tagline { color: var(--color-text-secondary); font-size: 14px; margin-bottom: 2rem; }
+  .prd h2 { font-size: 16px; font-weight: 500; margin: 2rem 0 0.5rem; border-bottom: 1px solid var(--color-border-tertiary); padding-bottom: 0.4rem; }
+  .prd h3 { font-size: 14px; font-weight: 500; margin: 1.2rem 0 0.3rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+  .prd p { margin: 0.4rem 0; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0; }
+  .pill { font-size: 12px; padding: 3px 10px; border-radius: 999px; font-weight: 500; }
+  .pill.in { background: var(--color-background-success); color: var(--color-text-success); }
+  .pill.out { background: var(--color-background-danger); color: var(--color-text-danger); }
+  .pill.ai { background: var(--color-background-info); color: var(--color-text-info); }
+  .flow { background: var(--color-background-secondary); border-radius: 8px; padding: 1rem 1.25rem; margin: 0.75rem 0; font-size: 13px; }
+  .flow .step { display: flex; gap: 0.75rem; align-items: flex-start; margin: 0.4rem 0; }
+  .flow .num { background: var(--color-text-secondary); color: var(--color-background-primary); border-radius: 50%; width: 18px; height: 18px; min-width: 18px; font-size: 10px; font-weight: 500; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+  .flow .txt { color: var(--color-text-primary); }
+  .flow .sub { color: var(--color-text-secondary); font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 0.75rem 0; }
+  th { text-align: left; font-weight: 500; padding: 6px 10px; background: var(--color-background-secondary); color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--color-border-tertiary); vertical-align: top; }
+  .tag { font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
+  .tag.p1 { background: var(--color-background-danger); color: var(--color-text-danger); }
+  .tag.p2 { background: var(--color-background-warning); color: var(--color-text-warning); }
+  .tag.p3 { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+  .quote { border-left: 3px solid var(--color-border-secondary); padding: 0.5rem 1rem; margin: 0.75rem 0; font-size: 13px; color: var(--color-text-secondary); font-style: italic; }
+</style>
+<div class="prd">
+  <h1>Campaign Copilot — PRD</h1>
+  <div class="tagline">AI-native Mini CRM · Xeno Engineering Assignment · June 2026</div>
+
+  <h2>Problem</h2>
+  <p>Marketers at D2C brands know who they want to reach but spend time in forms, segments, and copywriting tools — not thinking about the campaign. Existing CRMs make AI a button. Campaign Copilot makes AI the interface.</p>
+
+  <h2>The bet</h2>
+  <div class="quote">A chat-first experience where the marketer describes intent in natural language. The AI pushes back, asks smart questions, explains its reasoning — and sends the campaign in one click.</div>
+
+  <h2>Target user</h2>
+  <p>A marketing manager at a fashion or beauty brand. Non-technical. Knows their customers by behavior. Wants to run a campaign in under 5 minutes without learning a tool.</p>
+
+  <h2>Scope</h2>
+  <h3>In scope</h3>
+  <div class="pill-row">
+    <span class="pill in">Customer + order ingestion (CSV seed)</span>
+    <span class="pill in">AI-driven segmentation via chat</span>
+    <span class="pill in">Message drafting via AI</span>
+    <span class="pill in">WhatsApp + SMS simulation</span>
+    <span class="pill in">Stubbed channel service with async callbacks</span>
+    <span class="pill in">Real-time delivery dashboard (SSE)</span>
+    <span class="pill in">Campaign history</span>
+  </div>
+  <h3>Explicitly out of scope</h3>
+  <div class="pill-row">
+    <span class="pill out">RCS / Email channels</span>
+    <span class="pill out">Multi-step campaign sequences</span>
+    <span class="pill out">Auth / multi-tenant</span>
+    <span class="pill out">Real messaging providers</span>
+    <span class="pill out">Manual segment builder UI</span>
+    <span class="pill out">A/B testing</span>
+  </div>
+
+  <h2>Core user flow</h2>
+  <div class="flow">
+    <div class="step"><div class="num">1</div><div class="txt"><strong>Marketer opens chat</strong><div class="sub">Sees a blank conversational interface. No forms, no nav.</div></div></div>
+    <div class="step"><div class="num">2</div><div class="txt"><strong>States intent</strong><div class="sub">"Re-engage customers who haven't bought in 90 days, offer 10% off"</div></div></div>
+    <div class="step"><div class="num">3</div><div class="txt"><strong>AI responds with segment preview + smart question</strong><div class="sub">"Found 847 customers. Want to exclude VIPs who already got a discount this month?"</div></div></div>
+    <div class="step"><div class="num">4</div><div class="txt"><strong>AI drafts a message</strong><div class="sub">"Here's a WhatsApp message — want it more casual or more urgent?"</div></div></div>
+    <div class="step"><div class="num">5</div><div class="txt"><strong>AI recommends timing</strong><div class="sub">"Tuesday 11am gets 23% higher open rates for this segment."</div></div></div>
+    <div class="step"><div class="num">6</div><div class="txt"><strong>One-click send</strong><div class="sub">Campaign dispatched to stubbed channel service.</div></div></div>
+    <div class="step"><div class="num">7</div><div class="txt"><strong>Live delivery feed</strong><div class="sub">Sent → Delivered → Opened stats update in real time via SSE.</div></div></div>
+  </div>
+
+  <h2>AI behaviors (the differentiator)</h2>
+  <table>
+    <tr><th>Behavior</th><th>Example</th></tr>
+    <tr><td><span class="tag p1">Must</span> Segment preview</td><td>"Found 847 customers matching that criteria."</td></tr>
+    <tr><td><span class="tag p1">Must</span> Clarifying question</td><td>"Want to exclude VIPs with recent discounts?"</td></tr>
+    <tr><td><span class="tag p1">Must</span> Message draft</td><td>Produces WhatsApp/SMS copy inline</td></tr>
+    <tr><td><span class="tag p1">Must</span> Tone refinement</td><td>Rewrites on "make it more urgent"</td></tr>
+    <tr><td><span class="tag p2">Should</span> Timing recommendation</td><td>Based on simulated past campaign data</td></tr>
+    <tr><td><span class="tag p2">Should</span> Channel suggestion</td><td>"This audience skews WhatsApp — SMS has lower open rate."</td></tr>
+    <tr><td><span class="tag p3">Nice</span> Campaign naming</td><td>Auto-suggests a campaign name</td></tr>
+  </table>
+
+  <h2>AI persona</h2>
+  <div class="quote">A junior marketing analyst sitting next to you — asks smart questions, explains its reasoning, defers final decisions to you. Never just executes silently.</div>
+
+  <h2>Success criteria</h2>
+  <table>
+    <tr><th>Criterion</th><th>Bar</th></tr>
+    <tr><td>End-to-end demo works</td><td>Chat → segment → message → send → live stats</td></tr>
+    <tr><td>AI asks at least 1 clarifying question per campaign</td><td>Always, without prompting</td></tr>
+    <tr><td>Callback loop visible in dashboard</td><td>Stats update within 3s of send</td></tr>
+    <tr><td>Deployed and accessible</td><td>Public URL, no login needed</td></tr>
+  </table>
+</div>
