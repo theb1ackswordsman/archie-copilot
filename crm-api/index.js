@@ -580,6 +580,87 @@ app.get('/api/campaigns/:id', async (req, res) => {
 });
 
 /**
+ * GET /api/campaigns/:id/inspector
+ * Retrieves audit details for a campaign, returning customer order metrics,
+ * formatted matching reason, and delivery status. Sorted by delivery outcome.
+ */
+app.get('/api/campaigns/:id/inspector', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { data: messages, error } = await supabase
+      .from('campaign_messages')
+      .select(`
+        status,
+        customer_id,
+        customers (
+          name,
+          orders (
+            amount,
+            created_at
+          )
+        )
+      `)
+      .eq('campaign_id', id);
+
+    if (error) throw error;
+
+    const now = new Date();
+
+    const inspectorRows = (messages || []).map(row => {
+      const customer = row.customers || {};
+      const customerName = customer.name || 'Unknown Customer';
+      const orders = customer.orders || [];
+      const ordersCount = orders.length;
+
+      const totalSpend = orders.reduce((sum, o) => sum + parseFloat(o.amount || 0), 0);
+
+      let lastPurchaseDaysAgo = null;
+      if (ordersCount > 0) {
+        const dates = orders.map(o => new Date(o.created_at));
+        const lastOrderDate = new Date(Math.max(...dates));
+        lastPurchaseDaysAgo = Math.floor((now - lastOrderDate) / (1000 * 60 * 60 * 24));
+      }
+
+      // Generate a warm match reason in plain English
+      const ordersWord = ordersCount === 1 ? 'order' : 'orders';
+      const daysWord = lastPurchaseDaysAgo === 1 ? 'day' : 'days';
+      const lastShoppedText = lastPurchaseDaysAgo !== null
+        ? `last shopped ${lastPurchaseDaysAgo} ${daysWord} ago`
+        : 'never shopped';
+      const spendFormatted = `₹${Math.round(totalSpend).toLocaleString('en-IN')}`;
+      const filterMatchReason = `${ordersCount} ${ordersWord} · ${lastShoppedText} · spent ${spendFormatted} total`;
+
+      return {
+        customer_name: customerName,
+        status: row.status,
+        orders_count: ordersCount,
+        last_purchase_days_ago: lastPurchaseDaysAgo,
+        total_spend: totalSpend,
+        filter_match_reason: filterMatchReason
+      };
+    });
+
+    // Sort by status: DELIVERED first, OPENED second, other status third, FAILED last
+    const getStatusWeight = (status) => {
+      const s = (status || '').toUpperCase();
+      if (s === 'DELIVERED') return 1;
+      if (s === 'OPENED') return 2;
+      if (s === 'FAILED') return 4;
+      return 3;
+    };
+
+    inspectorRows.sort((a, b) => getStatusWeight(a.status) - getStatusWeight(b.status));
+
+    res.json(inspectorRows);
+  } catch (err) {
+    console.error('Error fetching campaign inspector data:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+/**
  * POST /api/campaigns
  * Directly creates and fires a campaign from JSON payload (alternative to chat agent).
  */

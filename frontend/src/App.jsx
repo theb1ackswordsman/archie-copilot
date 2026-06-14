@@ -70,6 +70,9 @@ function App() {
   const [liveStats, setLiveStats] = useState(null);
   const [recentEvents, setRecentEvents] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState('checking');
+  const [expandedCampaignId, setExpandedCampaignId] = useState(null);
+  const [inspectorData, setInspectorData] = useState([]);
+  const [isInspectorLoading, setIsInspectorLoading] = useState(false);
 
   const messagesEndRef = useRef(null);
   const sseRef = useRef(null);
@@ -178,6 +181,25 @@ function App() {
     // Connect SSE for live ticks
     connectSSE(campaignId);
   };
+
+  const fetchInspectorData = async (campaignId) => {
+    setIsInspectorLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}/inspector`);
+      if (res.ok) {
+        const data = await res.json();
+        setInspectorData(data);
+      } else {
+        setInspectorData([]);
+      }
+    } catch (err) {
+      console.error('Error fetching inspector data:', err);
+      setInspectorData([]);
+    } finally {
+      setIsInspectorLoading(false);
+    }
+  };
+
 
   // Custom Markdown parser for conversational formatting, configured for Light Mode
   const renderMarkdown = (text) => {
@@ -709,7 +731,11 @@ function App() {
                 return (
                   <div
                     key={camp.id}
-                    onClick={() => selectCampaign(camp.id)}
+                    onClick={() => {
+                      selectCampaign(camp.id);
+                      setExpandedCampaignId(camp.id);
+                      fetchInspectorData(camp.id);
+                    }}
                     className={`p-3 rounded-xl border transition-all duration-200 ease-out cursor-pointer text-left shadow-sm ${
                       isActive 
                         ? 'bg-white border-[#4F46E5] ring-2 ring-indigo-500/10' 
@@ -744,6 +770,56 @@ function App() {
                         <span>Opened: <strong className="text-[#4F46E5]">{camp.stats?.opened || 0}</strong></span>
                       </div>
                     </div>
+
+                    {/* Inline Campaign Inspector Panel */}
+                    {expandedCampaignId === camp.id && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-4 pt-4 border-t border-gray-100 space-y-3 cursor-default"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">Who did we reach?</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedCampaignId(null);
+                            }}
+                            className="text-xs text-gray-400 hover:text-gray-650 px-2 py-1 rounded hover:bg-gray-50 border-0 cursor-pointer bg-transparent transition-colors duration-150 flex items-center justify-center font-medium"
+                          >
+                            Close
+                          </button>
+                        </div>
+
+                        {isInspectorLoading ? (
+                          <div className="flex justify-center py-6">
+                            <span className="h-5 w-5 border-2 border-[#4F46E5] border-t-transparent rounded-full animate-spin"></span>
+                          </div>
+                        ) : inspectorData.length === 0 ? (
+                          <p className="text-xs text-gray-400 italic py-2 text-center">No data available yet.</p>
+                        ) : (
+                          <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                            {inspectorData.map((msg, index) => {
+                              let badgeStyle = 'bg-gray-50 text-gray-500';
+                              if (msg.status === 'DELIVERED') badgeStyle = 'bg-emerald-50 text-emerald-700';
+                              else if (msg.status === 'OPENED') badgeStyle = 'bg-indigo-50 text-indigo-700';
+                              else if (msg.status === 'FAILED') badgeStyle = 'bg-red-50 text-red-500';
+
+                              return (
+                                <div key={index} className="flex justify-between items-start py-2 border-b border-gray-50">
+                                  <div className="space-y-0.5">
+                                    <div className="text-xs font-medium text-gray-900">{msg.customer_name}</div>
+                                    <div className="text-xs text-gray-400">{msg.filter_match_reason}</div>
+                                  </div>
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${badgeStyle}`}>
+                                    {msg.status}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })
