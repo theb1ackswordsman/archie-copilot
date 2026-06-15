@@ -9,15 +9,18 @@ import { supabase } from '../db/supabase.js';
 export async function getSegmentedCustomers(filters = {}) {
   // If we have a sort_by === 'recent_orders', we do an aggregate query using Supabase
   if (filters.sort_by === 'recent_orders') {
-    const days = filters.last_purchase_days_lt || 30;
-    const dateLimit = new Date();
-    dateLimit.setDate(dateLimit.getDate() - days);
+    let query = supabase
+      .from('orders')
+      .select('customer_id, id.count()');
+
+    if (filters.last_purchase_days_lt !== undefined && filters.last_purchase_days_lt !== null) {
+      const dateLimit = new Date();
+      dateLimit.setDate(dateLimit.getDate() - filters.last_purchase_days_lt);
+      query = query.gte('created_at', dateLimit.toISOString());
+    }
 
     // Optimized group by query for top customers
-    const { data: topOrders, error: aggError } = await supabase
-      .from('orders')
-      .select('customer_id, id.count()')
-      .gte('created_at', dateLimit.toISOString())
+    const { data: topOrders, error: aggError } = await query
       .order('count', { ascending: false })
       .limit(filters.limit || 5);
 
@@ -103,13 +106,17 @@ export async function getSegmentedCustomers(filters = {}) {
   } else if (filters.sort_by === 'recent_orders') {
     // If we fell back due to aggregate query failure
     filtered.sort((a, b) => {
-      const days = filters.last_purchase_days_lt || 30;
-      const dateLimit = new Date();
-      dateLimit.setDate(dateLimit.getDate() - days);
-      
-      const aRecent = (a.orders || []).filter(o => new Date(o.created_at) >= dateLimit).length;
-      const bRecent = (b.orders || []).filter(o => new Date(o.created_at) >= dateLimit).length;
-      return bRecent - aRecent;
+      let aCount, bCount;
+      if (filters.last_purchase_days_lt !== undefined && filters.last_purchase_days_lt !== null) {
+        const dateLimit = new Date();
+        dateLimit.setDate(dateLimit.getDate() - filters.last_purchase_days_lt);
+        aCount = (a.orders || []).filter(o => new Date(o.created_at) >= dateLimit).length;
+        bCount = (b.orders || []).filter(o => new Date(o.created_at) >= dateLimit).length;
+      } else {
+        aCount = (a.orders || []).length;
+        bCount = (b.orders || []).length;
+      }
+      return bCount - aCount;
     });
   }
 

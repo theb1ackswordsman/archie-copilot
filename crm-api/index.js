@@ -372,11 +372,11 @@ app.post('/api/chat', async (req, res) => {
     const formattedContents = formatHistory(recentHistory);
 
     let aiText = '';
-    let usedModel = 'gemini-2.5-flash';
+    let usedModel = 'gemini-1.5-flash';
 
     try {
       const model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         systemInstruction: SYSTEM_PROMPT,
       });
 

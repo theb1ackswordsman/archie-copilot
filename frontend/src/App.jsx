@@ -159,7 +159,15 @@ function App() {
 
     sse.onerror = (err) => {
       console.error('[SSE Error]:', err);
-      disconnectSSE();
+      // EventSource.CLOSED === 2 means the browser gave up reconnecting
+      if (sse.readyState === 2) {
+        console.log('[SSE] Connection closed permanently, attempting reconnect in 3s...');
+        disconnectSSE();
+        setTimeout(() => {
+          connectSSE(campaignId);
+        }, 3000);
+      }
+      // If readyState is 0 (CONNECTING), the browser is already auto-reconnecting — do nothing
     };
   };
 
